@@ -1,0 +1,4 @@
+-r requirements-edge.txt
+pytest>=8
+ruff>=0.8
+mypy>=1.10

@@ -1,0 +1,4 @@
+[Event "En passant and queenside castling"]
+[Result "*"]
+
+1. e4 Nf6 2. e5 d5 3. exd6 exd6 4. Nf3 Nc6 5. d4 Be7 6. Bd3 Bg4 7. Be3 Qd7 8. Nbd2 O-O-O 9. O-O *

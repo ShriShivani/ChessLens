@@ -1,0 +1,4 @@
+[Event "Promotion with capture"]
+[Result "*"]
+
+1. e4 d5 2. exd5 c6 3. dxc6 Nf6 4. cxb7 Nbd7 5. bxc8=Q Qxc8 *
