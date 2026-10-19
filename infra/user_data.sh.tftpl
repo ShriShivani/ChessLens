@@ -1,0 +1,13 @@
+#!/bin/bash
+# First boot: install Docker and drop in the deploy script. The first real deploy is
+# triggered by the CD workflow (or by hand with `aws ssm send-command`), not from here.
+set -euxo pipefail
+
+dnf install -y docker
+systemctl enable --now docker
+
+mkdir -p /opt/chesslens
+cat > /opt/chesslens/deploy.sh <<'DEPLOY_SCRIPT'
+${deploy_script}
+DEPLOY_SCRIPT
+chmod 750 /opt/chesslens/deploy.sh

@@ -1,0 +1,36 @@
+#!/bin/bash
+# Pull the requested image tag and (re)start the two containers, then smoke test.
+# Usage (run via SSM):  IMAGE_TAG=<git sha> /opt/chesslens/deploy.sh
+set -euo pipefail
+
+TAG="$${IMAGE_TAG:-latest}"
+SERVER_IMAGE="ghcr.io/${image_owner}/chesslens-server:$TAG"
+WEB_IMAGE="ghcr.io/${image_owner}/chesslens-web:$TAG"
+
+TOKEN="$(aws ssm get-parameter --region ${region} --name '${token_param}' \
+  --with-decryption --query Parameter.Value --output text)"
+
+docker pull "$SERVER_IMAGE"
+docker pull "$WEB_IMAGE"
+
+docker network inspect chesslens >/dev/null 2>&1 || docker network create chesslens
+docker rm -f chesslens-web chesslens-server >/dev/null 2>&1 || true
+
+docker run -d --name chesslens-server --network chesslens --network-alias server \
+  --restart unless-stopped -v chesslens-data:/data \
+  -e INGEST_TOKEN="$TOKEN" \
+  "$SERVER_IMAGE"
+
+docker run -d --name chesslens-web --network chesslens \
+  --restart unless-stopped -p 80:8080 "$WEB_IMAGE"
+
+for i in $(seq 1 30); do
+  if curl -fsS http://localhost/health >/dev/null; then
+    echo "deployed $TAG: healthy"
+    exit 0
+  fi
+  sleep 2
+done
+echo "deploy of $TAG failed health check" >&2
+docker logs --tail 50 chesslens-server >&2 || true
+exit 1

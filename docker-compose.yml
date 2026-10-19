@@ -1,0 +1,32 @@
+# Local development and single-VM deployment: nginx (static web + proxy) in front of the API.
+# Usage:  copy .env.example to .env, set INGEST_TOKEN, then  docker compose up --build
+# Open http://localhost:8080 ; point the edge client at --server http://localhost:8080
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    environment:
+      INGEST_TOKEN: ${INGEST_TOKEN:?set INGEST_TOKEN in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      RATE_LIMIT_PER_MIN: ${RATE_LIMIT_PER_MIN:-120}
+      MAX_VIEWERS_PER_GAME: ${MAX_VIEWERS_PER_GAME:-500}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - chesslens-data:/data
+    expose:
+      - "8000"
+
+  web:
+    build:
+      context: ./web
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+
+volumes:
+  chesslens-data:

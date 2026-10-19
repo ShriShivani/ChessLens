@@ -179,7 +179,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if game is None:
                 await ws.close(code=WS_NOT_FOUND)
                 return
-            hello = {"type": "hello", "ply": len(game.moves), "fen": service.board_for(game).fen()}
+            hello = {
+                "type": "hello",
+                "ply": len(game.moves),
+                "fen": service.board_for(game).fen(),
+                "start_fen": game.start_fen,
+                "moves": [m.uci for m in game.moves],
+            }
         await ws.accept()
         await ws.send_json(hello)
         log.info("edge connected", extra={"game_id": game_id})

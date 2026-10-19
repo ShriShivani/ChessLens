@@ -1,0 +1,12 @@
+.git
+.venv
+.claude
+**/node_modules
+web/dist
+tests
+edge
+infra
+docs
+**/__pycache__
+*.db
+.env

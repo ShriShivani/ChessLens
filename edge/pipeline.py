@@ -41,6 +41,8 @@ class Pipeline:
         self.gate = StabilityGate(still_seconds)
         self.pgn_path = Path(pgn_path) if pgn_path else None
         self.paused = False
+        self.white = "?"
+        self.black = "?"
         self.board = chess.Board()
         self.start_fen: str | None = None
         self.last_warped: np.ndarray | None = None
@@ -169,12 +171,14 @@ class Pipeline:
         self._ref_history.clear()
 
     # ---- output -------------------------------------------------------------
-    def pgn(self, white: str = "?", black: str = "?", result: str | None = None) -> str:
+    def pgn(
+        self, white: str | None = None, black: str | None = None, result: str | None = None
+    ) -> str:
         game = chess.pgn.Game.from_board(self.board)
         game.headers["Event"] = "ChessLens"
         game.headers["Date"] = date.today().strftime("%Y.%m.%d")
-        game.headers["White"] = white
-        game.headers["Black"] = black
+        game.headers["White"] = white or self.white
+        game.headers["Black"] = black or self.black
         game.headers["Result"] = result or self.board.result(claim_draw=False)
         return str(game)
 
