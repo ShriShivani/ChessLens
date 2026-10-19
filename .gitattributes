@@ -1,0 +1,5 @@
+* text=auto
+*.sh eol=lf
+*.tftpl eol=lf
+Dockerfile eol=lf
+*.conf eol=lf
