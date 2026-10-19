@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+# Node
+node_modules/
+web/dist/
+# Secrets / local config
+.env
+.env.*
+!.env.example
+*.pem
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+!*.tfvars.example
+# Local data
+*.db
+*.sqlite3
+calibration.json
+*.pgn.tmp
+# Large media (real footage, generated fixtures)
+tests/real/*
+!tests/real/README.md
+tests/fixtures/*
+!tests/fixtures/.gitkeep
+*.mp4
+*.mov
+*.avi
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
