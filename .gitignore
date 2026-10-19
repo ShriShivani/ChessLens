@@ -40,3 +40,4 @@ tests/fixtures/*
 Thumbs.db
 .idea/
 .vscode/
+.claude/
