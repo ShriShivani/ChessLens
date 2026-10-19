@@ -17,3 +17,9 @@ Items cut from the MVP are recorded here.
 - Synthetic hands are flat 2D blobs drawn in board space; real hands cast shadows and occlude in 3D.
 - Very noisy video (synthetic sigma 12) stops the stability gate from firing; the threshold is absolute, not adaptive.
 - Lighting drift of 10% per move produced uncertain flags in a spot check.
+
+## Server gaps
+- Stockfish evaluation: the `STOCKFISH_*` variables in `.env.example` are placeholders; not implemented (COULD item).
+- Rate limiting and viewer fan-out are per-process in memory (single instance only).
+- No auth beyond the shared ingest token; anyone can read games.
+- Blocking SQLite calls run inside async handlers; fine at this scale, revisit for many concurrent edges.

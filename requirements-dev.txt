@@ -1,4 +1,6 @@
 -r requirements-edge.txt
+-r requirements-server.txt
+httpx>=0.27
 pytest>=8
 ruff>=0.8
 mypy>=1.10

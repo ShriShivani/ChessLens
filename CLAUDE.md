@@ -19,11 +19,12 @@ Turns camera video of a physical chessboard into moves, PGN and a live web broad
 
 ## Commands (PowerShell; venv at `.venv`)
 - Setup: `python -m venv .venv ; .\.venv\Scripts\pip install -r requirements-dev.txt`
-- Lint: `.\.venv\Scriptsuff check . ; .\.venv\Scriptsuff format --check .`
+- Lint: `.\.venv\Scripts\ruff check . ; .\.venv\Scripts\ruff format --check .`
 - Tests: `.\.venv\Scripts\python -m pytest -q`
 - Synthetic accuracy eval (fails below `tests/eval_thresholds.json`): `.\.venv\Scripts\python -m tests.eval`
 - Make a test video: `python -m tests.make_video tests/games/italian_castling.pgn tests/fixtures/italian`
 - Edge: `python -m edge calibrate --source 0` then `python -m edge run --source 0` (source = index, URL or file)
+- Server: `$env:INGEST_TOKEN='dev-token'; .\.venv\Scripts\uvicorn server.main:app_factory --factory --reload`
 - Web / full stack (later phases): `cd web ; npm ci ; npm run lint ; npm test` and `docker compose up --build`
 
 ## Edge design notes
