@@ -37,6 +37,7 @@ Vision runs on the edge machine, not in the cloud. Only small move events leave 
 | `server/` | FastAPI: game REST API, ingest and viewer WebSockets, rate limiting, JSON logs |
 | `web/` | React + TypeScript (strict) + Vite spectator app, built to static files |
 | `tests/` | Unit tests, synthetic footage generator, accuracy evaluation (synthetic and real) |
+| `ml/` | Optional per-square piece classifier (verifier for the tracker): data, training, ONNX export. Synthetic baseline only so far |
 | `infra/` | Terraform for one small EC2 VM, alerts and GitHub OIDC deploy role |
 | `docs/` | Accuracy, runbook, costs, roadmap, demo script, resume bullets |
 

@@ -1,0 +1,7 @@
+-r requirements-edge.txt
+torch>=2.4
+torchvision>=0.19
+timm>=1.0
+onnx>=1.16
+onnxruntime>=1.18
+pyyaml>=6

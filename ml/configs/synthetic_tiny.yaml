@@ -1,0 +1,8 @@
+# Baseline on SYNTHETIC crops only. Results say nothing about real boards.
+name: synthetic_tiny
+data_dirs: [ml/data/synthetic]
+backbone: tiny
+epochs: 12
+batch_size: 128
+patience: 4
+seed: 0

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 import chess
@@ -111,9 +112,16 @@ def score_move(
 
 
 def detect_move(
-    board: chess.Board, prev: np.ndarray, cur: np.ndarray, cfg: DetectorConfig | None = None
+    board: chess.Board,
+    prev: np.ndarray,
+    cur: np.ndarray,
+    cfg: DetectorConfig | None = None,
+    prior: Callable[[chess.Move], float] | None = None,
 ) -> Detection:
-    """Decide which legal move (if any) turned `prev` into `cur`."""
+    """Decide which legal move (if any) turned `prev` into `cur`.
+
+    `prior` optionally adds a per-move score adjustment (for example from a classifier).
+    """
     cfg = cfg or DetectorConfig()
     changes = square_changes(prev, cur, cfg)
     n_changed = int(np.sum(changes > cfg.changed_threshold))
@@ -123,7 +131,10 @@ def detect_move(
         return Detection("occluded")
 
     scored = sorted(
-        (Candidate(m, score_move(board, m, changes, cfg)) for m in candidate_moves(board)),
+        (
+            Candidate(m, score_move(board, m, changes, cfg) + (prior(m) if prior else 0.0))
+            for m in candidate_moves(board)
+        ),
         key=lambda c: c.score,
         reverse=True,
     )

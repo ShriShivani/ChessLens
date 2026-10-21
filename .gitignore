@@ -41,3 +41,11 @@ Thumbs.db
 .idea/
 .vscode/
 .claude/
+
+ml/data/*
+!ml/data/.gitkeep
+ml/runs/
+ml/models/*.onnx
+ml/models/*.pt
+*.pt
+ml/models/*.json

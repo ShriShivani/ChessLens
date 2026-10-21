@@ -13,6 +13,12 @@ import numpy as np
 from edge.calibration import Calibration
 from edge.detector import Candidate, DetectorConfig, detect_move
 from edge.stability import StabilityGate
+from edge.verify import (
+    Classifier,
+    decode_position,
+    make_prior,
+    occupancy_mismatches,
+)
 
 
 @dataclass(frozen=True)
@@ -35,11 +41,19 @@ class Pipeline:
         cfg: DetectorConfig | None = None,
         still_seconds: float = 0.7,
         pgn_path: str | Path | None = None,
+        classifier: Classifier | None = None,
+        classifier_weight: float = 0.5,
+        desync_squares: int = 3,
     ) -> None:
         self.calibration = calibration
         self.cfg = cfg or DetectorConfig()
         self.gate = StabilityGate(still_seconds)
         self.pgn_path = Path(pgn_path) if pgn_path else None
+        self.classifier = classifier
+        self.classifier_weight = classifier_weight
+        self.desync_squares = desync_squares
+        self.proposed_fen: str | None = None
+        self._last_desync: tuple[str, ...] = ()
         self.paused = False
         self.white = "?"
         self.black = "?"
@@ -65,9 +79,15 @@ class Pipeline:
         if self._reference is None:
             self._reference = warped
             return []
-        result = detect_move(self.board, self._reference, warped, self.cfg)
+        probs = self.classifier.predict(warped) if self.classifier else None
+        prior = None
+        if probs is not None:
+            moves = list(self.board.legal_moves)
+            prior = make_prior(self.board, moves, probs, self.classifier_weight)
+        result = detect_move(self.board, self._reference, warped, self.cfg, prior)
         if result.status == "move" and result.move is not None:
-            return [self._push(result.move, warped, result.confidence)]
+            events = [self._push(result.move, warped, result.confidence)]
+            return events + self._verify(probs)
         if result.status == "uncertain":
             self._pending = result.candidates
             sans = tuple(self.board.san(c.move) for c in result.candidates)
@@ -81,7 +101,37 @@ class Pipeline:
                         candidates=sans,
                     )
                 ]
-        return []
+        return self._verify(probs) if result.status == "nochange" else []
+
+    def _verify(self, probs: np.ndarray | None) -> list[Event]:
+        """Flag a possible desync when the classifier disagrees with the tracked board."""
+        if probs is None:
+            return []
+        bad = occupancy_mismatches(self.board, probs)
+        if len(bad) < self.desync_squares:
+            self._last_desync = ()
+            return []
+        names = tuple(chess.square_name(sq) for sq in bad)
+        if names == self._last_desync:
+            return []
+        self._last_desync = names
+        proposed, errors = decode_position(probs, self.board.turn)
+        self.proposed_fen = None if errors else proposed.fen()
+        return [
+            Event(
+                "desync",
+                len(self.board.move_stack),
+                fen=self.proposed_fen or "",
+                candidates=names,
+            )
+        ]
+
+    def accept_proposal(self) -> Event | None:
+        """Adopt the classifier-proposed position after the operator has checked it."""
+        if not self.proposed_fen:
+            return None
+        fen, self.proposed_fen = self.proposed_fen, None
+        return self.set_fen(fen)
 
     def _push(self, move: chess.Move, warped: np.ndarray, confidence: float = 1.0) -> Event:
         san = self.board.san(move)

@@ -17,7 +17,7 @@ from edge.pipeline import Event, Pipeline
 from edge.uploader import Uploader, create_game
 
 WINDOW = "ChessLens"
-HELP = "u undo | f set FEN | m force move | 1-3 confirm | p pause | x flip | n new game | q quit"
+HELP = "u undo|f FEN|m move|1-3 confirm|r accept proposal|p pause|x flip|n new|q quit"
 
 
 def open_source(source: str) -> tuple[cv2.VideoCapture, bool]:
@@ -77,6 +77,13 @@ def calibrate(args: argparse.Namespace) -> int:
 def describe(event: Event) -> str:
     if event.kind == "move":
         return f"ply {event.ply}: {event.san}  (confidence {event.confidence:.2f})"
+    if event.kind == "desync":
+        where = ", ".join(event.candidates)
+        if event.fen:
+            return (
+                f"POSSIBLE DESYNC at {where}; classifier proposes {event.fen} (press r to accept)"
+            )
+        return f"POSSIBLE DESYNC at {where}; no consistent position could be decoded"
     if event.kind == "uncertain":
         return f"UNCERTAIN, press 1-{len(event.candidates)}: " + ", ".join(event.candidates)
     return event.kind
@@ -95,6 +102,8 @@ def handle_key(pipe: Pipeline, key: int) -> tuple[list[Event], bool]:
         pipe.flip()
     elif key == ord("n"):
         events.append(pipe.new_game())
+    elif key == ord("r"):
+        events.append(pipe.accept_proposal())
     elif key in (ord("1"), ord("2"), ord("3")):
         events.append(pipe.confirm_uncertain(key - ord("1")))
     elif key == ord("f"):
@@ -136,8 +145,16 @@ def run(args: argparse.Namespace) -> int:
         print(f"cannot open {args.source}")
         return 1
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    classifier = None
+    if args.classifier:
+        from ml.infer import SquareClassifier  # needs onnxruntime; optional
+
+        classifier = SquareClassifier(args.classifier)
     pipe = Pipeline(
-        Calibration.load(args.calibration), still_seconds=args.still, pgn_path=args.pgn_out
+        Calibration.load(args.calibration),
+        still_seconds=args.still,
+        pgn_path=args.pgn_out,
+        classifier=classifier,
     )
     pipe.white, pipe.black = args.white, args.black
     uploader = start_uploader(args)
@@ -186,6 +203,7 @@ def main(argv: list[str] | None = None) -> int:
     rn.add_argument("--pgn-out", type=Path, default=Path("game.pgn"))
     rn.add_argument("--still", type=float, default=0.7, help="seconds the board must be still")
     rn.add_argument("--headless", action="store_true", help="no window, print events only")
+    rn.add_argument("--classifier", type=Path, help="ONNX square classifier (optional verifier)")
     rn.add_argument("--server", help="server base URL, e.g. http://localhost:8000 (omit = offline)")
     rn.add_argument("--token", help="ingest token (default: INGEST_TOKEN env var)")
     rn.add_argument("--game-id", help="attach to an existing game instead of creating one")

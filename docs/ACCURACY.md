@@ -52,6 +52,25 @@ These were spot checks while developing, not part of CI.
 - Only queen promotions are generated; underpromotion cannot be detected at all.
 - Nothing here says anything about accuracy on a real board.
 
+## Piece classifier (`ml/`), synthetic only
+
+From `python -m ml.evaluate --run ml/runs/synthetic_tiny --split test` on 2026-10-21: a tiny CNN
+trained on 6 synthetic games and tested on 3 synthetic games from a lighting/colour session it
+never saw (24 boards, 1,536 crops). The synthetic pieces are an invented look, so none of this
+says anything about real boards.
+
+| Metric | Result |
+|---|---|
+| Occupancy/colour accuracy | 100.0% |
+| Piece-type accuracy on occupied squares | 83.7% |
+| 13-class square accuracy | 92.6% |
+| Full-board exact match | 0 / 24 boards |
+| Weakest classes by recall | black knight 2%, white knight 6%, white queen 62%, white bishop 67% |
+
+Latency (CPU, onnxruntime, this development laptop, tiny model): about 62 ms per board
+(12 ms cropping + 49 ms model), above the 50 ms target in the plan. Details and caveats:
+[ml/models/MODEL_CARD.md](../ml/models/MODEL_CARD.md). There is no real-footage classifier result yet.
+
 ## Real footage
 
 **No real clips have been evaluated yet.** To produce numbers, record clips and labels as

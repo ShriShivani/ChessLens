@@ -121,3 +121,23 @@ jobs:
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
           working_directory: infra
+
+  ml:
+    name: ML tests (CPU torch)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-*.txt
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-dev.txt
+          pip uninstall -y opencv-python
+          pip install opencv-python-headless
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install timm onnx onnxruntime pyyaml
+      - name: ML tests (train, evaluate, export, classify on a tiny synthetic set)
+        run: pytest tests/ml -q

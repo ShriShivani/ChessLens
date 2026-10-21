@@ -1,0 +1,11 @@
+# Recommended main model: pretrained MobileNetV3-Small, trained on REAL crops from
+# ml/scripts/extract_crops.py. Add `init_from: ml/runs/<synthetic run>/model.pt` to start from a
+# synthetic-pretrained checkpoint (same backbone), and compare with a real-only run.
+name: real_mobilenet
+data_dirs: [ml/data/real]
+backbone: mobilenetv3_small_100
+pretrained: true
+epochs: 40
+batch_size: 128
+patience: 6
+seed: 0

@@ -31,3 +31,10 @@ Items cut from the MVP are recorded here.
 - No TLS: the deployed site is plain HTTP. Options: a TLS proxy (Cloudflare) or Caddy with a domain.
 - The VM deploy uses `docker run` through an SSM script, not the compose file.
 - Real-board accuracy has not been measured; see `docs/ACCURACY.md` and `tests/real/README.md`.
+
+## ML classifier (see docs/ML_PLAN.md and ml/README.md)
+- Not done: any training on real crops, the day-1 feasibility test, a pretrained MobileNetV3 run, synthetic-pretrain vs real-only comparison, per-lighting breakdown, TensorBoard/W&B logging.
+- Synthetic knights are almost never recognised (small mark); the renderer or a tilted real camera are the next things to look at.
+- CPU latency above the 50 ms target (about 62 ms for the tiny model); try a smaller input or lighter backbone.
+- The classifier prior can only lower move scores; it cannot rescue a move whose frame-difference confidence is below threshold. One synthetic seed (11) shows such a first-move miss even without a classifier.
+- Recovery proposals do not set castling rights or en passant; the operator must check the FEN.

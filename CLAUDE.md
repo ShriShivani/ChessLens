@@ -25,9 +25,12 @@ Turns camera video of a physical chessboard into moves, PGN and a live web broad
 - Make a test video: `python -m tests.make_video tests/games/italian_castling.pgn tests/fixtures/italian`
 - Edge: `python -m edge calibrate --source 0` then `python -m edge run --source 0` (source = index, URL or file)
 - Server: `$env:INGEST_TOKEN='dev-token'; .\.venv\Scripts\uvicorn server.main:app_factory --factory --reload`
+- ML (see ml/README.md): `pip install -r requirements-ml.txt`; `python -m ml.train --config ml/configs/synthetic_tiny.yaml`; `python -m ml.evaluate --run ml/runs/<name> --split test`; `python -m edge run ... --classifier ml/models/squarenet.onnx`
 - Web / full stack (later phases): `cd web ; npm ci ; npm run lint ; npm test` and `docker compose up --build`
 
 ## Edge design notes
 - `edge/detector.py` scores each legal move by change on its expected squares minus a leak penalty; flags "uncertain" instead of guessing.
 - Exposure is matched with a robust gain+offset fit before differencing (global lighting shifts must not look like moves).
 - Operator controls act on `Pipeline.last_stable` (never a frame with a hand in it).
+- `ml/common.py` holds the only square-crop function; train, evaluate and infer all use it. Keep torch out of `ml/common.py`, `ml/infer.py` and `edge/` (onnxruntime only).
+- ML numbers: synthetic and real are reported separately; the synthetic piece renderer is invented, never present its results as real accuracy.
